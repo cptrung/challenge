@@ -1,102 +1,80 @@
-import React, { Component } from 'react';
-import { Map, Marker, GoogleApiWrapper } from 'google-maps-react';
-import styles from './styles.css';
+import _ from "lodash";
+import React from "react";
+import {
+  withScriptjs,
+  withGoogleMap,
+  GoogleMap,
+  Marker,
+  DirectionsRenderer,
+  MarkerClusterer
+} from "react-google-maps";
 
-class Contents extends Component {
-  state = {
-    position: null
-  };
+import Maps from './Maps';
+
+class MapContainer extends React.PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      lat: 0,
+      lng: 0,
+      markers: [{
+        lat: 16.4657437,
+        lng: 107.59208860000001,
+        address: `10 Hùng Vương, Phú Nhuận, Thành phố Huế, Thua Thien Hue, Vietnam`,
+        icon: `http://pluspng.com/img-png/png-tel-ka-t-qua-hinh-a-nh-cho-tel-flat-icon-png-700.png`
+      },{
+        lat: 16.456184,
+        lng: 107.58093600000007,
+        address: `20 Điện Biên Phủ, Phường Đúc, Thành phố Huế, Thua Thien Hue, Vietnamm`,
+        icon: `http://blog.soomla.com/wp-content/uploads/2015/11/email-2-icon.png`
+      },{
+        lat: 16.4588924,
+        lng: 107.59023649999995,
+        address: `10 Đống Đa, Thành phố Huế, Thua Thien Hue, Vietnam`,
+        icon: `https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Chrome_icon_%28September_2014%29.svg/768px-Google_Chrome_icon_%28September_2014%29.svg.png`
+      },{
+        lat: 16.455263,
+        lng: 107.59596929999998,
+        address: `300 Phan Chu Trinh, An Cựu, Thành phố Huế, Thua Thien Hue, Vietnam`
+      },{
+        lat: 16.4685374,
+        lng: 107.59870849999993,
+        address: `30 Bà Triệu, Phú Hội, Thành phố Huế, Thua Thien Hue, Vietnam`
+      },{
+        lat: 16.4640598,
+        lng: 107.60495379999998,
+        address: `50 Tố Hữu, Thành phố Huế, Thua Thien Hue, Vietnam`
+      }]
+    }
+  }
 
   componentDidMount() {
-    this.renderAutoComplete();
+    this.getGeoLocation()
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props !== prevProps.map) this.renderAutoComplete();
-  }
-
-  onSubmit(e) {
-    e.preventDefault();
-  }
-
-  renderAutoComplete() {
-    const { google, map } = this.props;
-
-    if (!google || !map) return;
-
-    const autocomplete = new google.maps.places.Autocomplete(this.autocomplete);
-    autocomplete.bindTo('bounds', map);
-
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-
-      if (!place.geometry) return;
-
-      if (place.geometry.viewport) map.fitBounds(place.geometry.viewport);
-      else {
-        map.setCenter(place.geometry.location);
-        map.setZoom(17);
-      }
-
-      this.setState({ position: place.geometry.location });
-    });
+  getGeoLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          this.setState({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          })
+        }
+      )
+    }
   }
 
   render() {
-    const { position } = this.state;
-
+    const { lat, lng, markers } = this.state;
     return (
-      <div className={styles.flexWrapper}>
-      <div id="floating-panel">
-        <b>Mode of Travel: </b>
-        <select id="mode">
-          <option value="DRIVING">Driving</option>
-          <option value="WALKING">Walking</option>
-          <option value="BICYCLING">Bicycling</option>
-          <option value="TRANSIT">Transit</option>
-        </select>
-        </div>
-        <div className={styles.left}>
-          <form onSubmit={this.onSubmit}>
-            <input
-              placeholder="Enter a location"
-              ref={ref => (this.autocomplete = ref)}
-              type="text"
-            />
-
-            <input className={styles.button} type="submit" value="Go" />
-          </form>
-
-          <div>
-            <div>Lat: {position && position.lat()}</div>
-            <div>Lng: {position && position.lng()}</div>
-          </div>
-        </div>
-
-        <div className={styles.right}>
-          <Map
-            {...this.props}
-            center={position}
-            centerAroundCurrentLocation={false}
-            containerStyle={{
-              height: '100vh',
-              position: 'relative',
-              width: '100%'
-            }}>
-            <Marker position={position} />
-          </Map>
-        </div>
-      </div>
-    );
+      <Maps
+        key="map"
+        center={{ lat, lng }}
+        markers={markers}
+      />
+    )
   }
 }
 
-const MapContainer = props => (
-  <Map className="map" google={props.google} visible={false}>
-    <Contents {...props} />
-  </Map>
-);
-
-export default GoogleApiWrapper({
-  apiKey: ('AIzaSyCLsHXXsmgBjJ5-9EjM8fVQhpDDJ10jM4M')
-})(MapContainer)
+export default MapContainer;
